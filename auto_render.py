@@ -19,8 +19,8 @@ import sys
 # ============================================================
 DESKTOP = os.path.join(os.path.expanduser("~"), "Desktop")
 RENDER_DIR = os.path.join(DESKTOP, "voxelsim_renders")
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PIPELINE_SCRIPT = os.path.join(SCRIPT_DIR, "voxelsim_pipeline.py")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) or '.'
+PIPELINE_SCRIPT = os.path.join(SCRIPT_DIR, 'voxelsim_pipeline.py')
 
 # Blender-Pfad (auto-detect)
 BLENDER_PATHS = [

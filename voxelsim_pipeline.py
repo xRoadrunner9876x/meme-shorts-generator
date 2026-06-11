@@ -15,7 +15,7 @@ from mathutils import Vector
 # ============================================================
 # CONFIG — HIER SZENE AUSWÄHLEN
 # ============================================================
-SCENE_ID = 2
+SCENE_ID = 1
 
 SCENES = {
     1: {"blocks": 1,  "name": "1_block",    "particles": 30,  "height": 5.0},
