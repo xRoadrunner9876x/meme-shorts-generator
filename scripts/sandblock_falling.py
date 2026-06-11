@@ -1,66 +1,52 @@
 """
 Minecraft Sand Block Falling - YouTube Short (9:16, 1080x1920)
-Blender 5.x compatible
+Blender 5.x | EEVEE | Foolproof
 
-WICHTIG: Vor dem Rendern eine .blend Datei speichern!
-  File → Save As → z.B. Desktop/sandblock.blend
-Dann: Render → Render Animation (Ctrl+F12)
-Output liegt dann im Ordner "renders/" neben der .blend Datei.
+1. Script pasten → Run (▶️)
+2. F12 = Einzelbild testen (Vorschau)
+3. Strg+F12 = Ganze Animation rendern → MP4 landet auf dem Desktop
 """
 
 import bpy
 import math
 import os
+import subprocess
 from mathutils import Vector
 
 # ============================================================
-# 1. SZENE KOMPLETT LEEREN
+# 1. SZENE LEEREN
 # ============================================================
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
-
-for block in [bpy.data.meshes, bpy.data.materials, bpy.data.cameras,
-              bpy.data.lights, bpy.data.worlds]:
-    for item in block:
-        block.remove(item)
+for coll in [bpy.data.meshes, bpy.data.materials, bpy.data.cameras,
+             bpy.data.lights, bpy.data.worlds]:
+    for item in coll:
+        coll.remove(item)
 
 scene = bpy.context.scene
 
 # ============================================================
-# 2. RENDER SETTINGS
+# 2. RENDER SETTINGS (EEVEE = schnell!)
 # ============================================================
-scene.render.engine = 'CYCLES'
-scene.cycles.samples = 256
-scene.cycles.use_denoising = True
+scene.render.engine = 'BLENDER_EEVEE'
 scene.render.resolution_x = 1080
 scene.render.resolution_y = 1920
 scene.render.fps = 60
 scene.frame_start = 1
-scene.frame_end = 120
+scene.frame_end = 120  # 2 Sekunden
 
-# Output-Pfad: erstellt einen "renders" Ordner auf dem Desktop
+# Output → Desktop/blender_renders/ (PNG Einzelbilder)
 desktop = os.path.join(os.path.expanduser("~"), "Desktop")
 render_dir = os.path.join(desktop, "blender_renders")
 os.makedirs(render_dir, exist_ok=True)
-scene.render.filepath = os.path.join(render_dir, "sandblock_")
+scene.render.filepath = os.path.join(render_dir, "frame_")
 
-# Video Output (Blender 5.x)
-scene.render.image_settings.media_type = 'VIDEO'
-scene.render.image_settings.file_format = 'FFMPEG'
-scene.render.ffmpeg.format = 'MPEG4'
-scene.render.ffmpeg.codec = 'H264'
-scene.render.ffmpeg.constant_rate_factor = 'MEDIUM'
+# PNG Einzelbilder (sicherster Weg)
+scene.render.image_settings.media_type = 'IMAGE'
+scene.render.image_settings.file_format = 'PNG'
+scene.render.image_settings.color_mode = 'RGB'
 
-# GPU
-try:
-    prefs = bpy.context.preferences.addons['cycles'].preferences
-    prefs.compute_device_type = 'CUDA'
-    prefs.get_devices()
-    for device in prefs.devices:
-        device.use = True
-    scene.cycles.device = 'GPU'
-except Exception:
-    scene.cycles.device = 'CPU'
+# EEVEE Settings für bessere Qualität
 
 
 # ============================================================
@@ -92,7 +78,6 @@ def add_mat(obj, name, color, roughness=0.8):
     bsdf.inputs['Base Color'].default_value = color
     bsdf.inputs['Roughness'].default_value = roughness
     obj.data.materials.append(mat)
-    return mat
 
 
 def add_rb(obj, body_type='ACTIVE', mass=1.0, friction=0.5, restitution=0.0):
@@ -102,12 +87,13 @@ def add_rb(obj, body_type='ACTIVE', mass=1.0, friction=0.5, restitution=0.0):
     obj.rigid_body.mass = mass
     obj.rigid_body.friction = friction
     obj.rigid_body.restitution = restitution
-    return obj
 
 
 # ============================================================
-# 4. SANDBLOCK (fällt von oben)
+# 4. OBJEKTE
 # ============================================================
+
+# --- Sandblock (fällt!) ---
 sandblock = make_cube("Sandblock", (0, 0, 3.0), size=1.0)
 sandblock.rotation_euler = (0.1, 0.05, 0.3)
 add_mat(sandblock, "Sand", (0.84, 0.72, 0.47, 1.0), 0.85)
@@ -115,70 +101,57 @@ add_rb(sandblock, 'ACTIVE', mass=5.0, friction=0.7, restitution=0.05)
 sandblock.rigid_body.linear_damping = 0.1
 sandblock.rigid_body.angular_damping = 0.3
 
-# ============================================================
-# 5. BODEN (großer Gras-Block)
-# ============================================================
+# --- Boden ---
 ground = make_cube("Ground", (0, 0, -1.0), size=2.0)
 ground.scale = (8, 8, 1)
 add_mat(ground, "Grass", (0.35, 0.55, 0.25, 1.0), 0.9)
-add_rb(ground, 'PASSIVE', friction=0.8, restitution=0.0)
+add_rb(ground, 'PASSIVE', friction=0.8)
 
-# ============================================================
-# 6. EINZELNE DEKO-BLÖCKE (weniger = cleaner)
-# ============================================================
-deco_data = [
-    ((-3, 2, 0), (0.45, 0.32, 0.18, 1.0), 0.6),    # Dirt
-    ((3, -1.5, 0), (0.50, 0.50, 0.50, 1.0), 0.7),    # Stone
-]
-for i, (pos, col, sz) in enumerate(deco_data):
+# --- 2 Deko-Blöcke ---
+for i, (pos, col, sz) in enumerate([
+    ((-3, 2, 0), (0.45, 0.32, 0.18, 1.0), 0.6),
+    ((3, -1.5, 0), (0.50, 0.50, 0.50, 1.0), 0.7),
+]):
     block = make_cube(f"Deco_{i}", pos, size=sz)
-    add_mat(block, f"DecoMat_{i}", col, roughness=0.9)
+    add_mat(block, f"DecoMat_{i}", col, 0.9)
     add_rb(block, 'PASSIVE', friction=0.8)
 
 # ============================================================
-# 7. KAMERA (auf den Sandblock fokussiert)
+# 5. KAMERA
 # ============================================================
 cam_data = bpy.data.cameras.new("Camera")
 cam_data.lens = 50
-cam_data.dof.use_dof = True
-cam_data.dof.aperture_fstop = 2.8
-
 camera = bpy.data.objects.new("Camera", cam_data)
 camera.location = (4.0, -5.0, 5.0)
-
-# Kamera schaut auf den Sandblock
 direction = Vector((0, 0, 1.5)) - camera.location
 camera.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
-
-cam_data.dof.focus_object = sandblock
 scene.collection.objects.link(camera)
 scene.camera = camera
 
 # ============================================================
-# 8. LICHT (warm, cinematic)
+# 6. LICHT
 # ============================================================
-# Key Light (Sonne)
-sun_data = bpy.data.lights.new("KeyLight", 'SUN')
+# Key Light
+sun_data = bpy.data.lights.new("Sun", 'SUN')
 sun_data.energy = 5.0
 sun_data.color = (1.0, 0.95, 0.85)
-sun_data.angle = math.radians(5)
-sun = bpy.data.objects.new("KeyLight", sun_data)
+sun = bpy.data.objects.new("Sun", sun_data)
 sun.location = (5, -3, 10)
 sun.rotation_euler = (math.radians(40), math.radians(10), math.radians(20))
 scene.collection.objects.link(sun)
 
-# Fill Light (Area, weich)
-fill_data = bpy.data.lights.new("FillLight", 'AREA')
+# Fill Light
+fill_data = bpy.data.lights.new("Fill", 'AREA')
 fill_data.energy = 300
 fill_data.size = 5
 fill_data.color = (0.8, 0.85, 1.0)
-fill = bpy.data.objects.new("FillLight", fill_data)
+fill = bpy.data.objects.new("Fill", fill_data)
 fill.location = (-5, -3, 6)
 fill.rotation_euler = (math.radians(50), 0, math.radians(-20))
 scene.collection.objects.link(fill)
 
 # ============================================================
-# 9. WORLD (heller Himmel)
+# 7. WORLD
 # ============================================================
 world = bpy.data.worlds.new("World")
 scene.world = world
@@ -188,12 +161,53 @@ bg.inputs['Color'].default_value = (0.78, 0.88, 0.95, 1.0)
 bg.inputs['Strength'].default_value = 1.2
 
 # ============================================================
+# 8. AUTO-CONVERT: Nach dem Rendern → MP4 via ffmpeg
+# ============================================================
+# Handler der nach dem Rendern ffmpeg aufruft
+import tempfile
+
+def convert_to_mp4(scene):
+    """Wird nach jedem Render aufgerufen. Konvertiert PNGs → MP4."""
+    png_pattern = os.path.join(render_dir, "frame_")
+    mp4_path = os.path.join(desktop, "minecraft_short.mp4")
+
+    # Finde das PNG-Pattern (Blender nutzt #### für Frame-Nummern)
+    cmd = [
+        "ffmpeg", "-y",
+        "-framerate", "60",
+        "-i", f"{png_pattern}%04d.png",
+        "-c:v", "libx264",
+        "-pix_fmt", "yuv420p",
+        "-crf", "18",
+        mp4_path
+    ]
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            print(f"MP4 ERSTELLT: {mp4_path}")
+        else:
+            print(f"FFmpeg Fehler: {result.stderr[:200]}")
+    except FileNotFoundError:
+        print("FFmpeg nicht gefunden! Installiere es: https://ffmpeg.org")
+    except Exception as e:
+        print(f"Fehler: {e}")
+
+
+# Handler registrieren (wird nach Ctrl+F12 automatisch aufgerufen)
+bpy.app.handlers.render_complete.clear()
+bpy.app.handlers.render_complete.append(convert_to_mp4)
+
+
+# ============================================================
 # FERTIG!
 # ============================================================
 print("=" * 50)
 print("SZENE FERTIG!")
 print(f"Render-Ordner: {render_dir}")
-print("1. File → Save As (irgendwo speichern)")
-print("2. Ctrl+F12 → Rendert automatisch als MP4")
-print("3. F12 → Einzelbild testen")
+print("")
+print("F12       = Einzelbild testen")
+print("Strg+F12  = Animation rendern → MP4 auf Desktop")
+print("")
+print(f"MP4 landet auf: {desktop}/minecraft_short.mp4")
 print("=" * 50)
