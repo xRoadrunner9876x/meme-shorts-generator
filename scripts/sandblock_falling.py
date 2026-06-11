@@ -28,10 +28,7 @@ scene.render.fps = 60
 scene.frame_start = 1
 scene.frame_end = 120                # 2 Sekunden bei 60fps
 scene.render.filepath = "//renders/sandblock_"
-scene.render.image_settings.file_format = 'FFMPEG_VIDEO'
-scene.render.ffmpeg.format = 'MPEG4'
-scene.render.ffmpeg.codec = 'H264'
-scene.render.ffmpeg.constant_rate_factor = 'MEDIUM'
+scene.render.image_settings.file_format = 'PNG'
 
 # GPU aktivieren (Cycles Preferences)
 prefs = bpy.context.preferences.addons['cycles'].preferences
@@ -209,13 +206,31 @@ bpy.ops.rigidbody.bake_to_keyframes(
 )
 
 # ============================================================
-# FERTIG! 
+# FERTIG! SZENE STEHT.
 # ============================================================
+# Nach dem Rendern (Ctrl+F12) werden PNG-Einzelbilder erzeugt.
+# Diese Konvertierung passiert NICHT automatisch.
+# Führe nach dem Rendern diesen Befehl im Terminal aus:
+#
+#   ffmpeg -framerate 60 -i renders/sandblock_%04d.png -c:v libx264 -pix_fmt yuv420p -crf 18 output.mp4
+#
+# ODER: Render direkt über Blender CLI (siehe unten)
+
+import os
+import subprocess
+
+render_dir = os.path.join(os.path.dirname(bpy.data.filepath) or os.getcwd(), "renders")
+output_mp4 = os.path.join(os.path.dirname(render_dir) or os.getcwd(), "sandblock_short.mp4")
+
 print("=" * 50)
-print("SANDBLOCK SZENE FERTIG!")
+print("SZENE FERTIG!")
 print("=" * 50)
-print(f"Render: Ctrl+F12 oder Render → Render Animation")
-print(f"Ausgabe: //renders/sandblock_####.mp4")
+print(f"1. Rendern: Ctrl+F12 (Render Animation)")
+print(f"   Bilder werden in: renders/sandblock_####.png gespeichert")
+print(f"")
+print(f"2. Danach im Terminal ausfuehren:")
+print(f"   ffmpeg -framerate 60 -i renders/sandblock_%04d.png -c:v libx264 -pix_fmt yuv420p -crf 18 sandblock_short.mp4")
+print(f"")
 print(f"Format: 1080x1920 (9:16), 60fps, 2 Sekunden")
 print(f"GPU: Cycles mit CUDA")
 print("=" * 50)
