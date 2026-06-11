@@ -53,7 +53,22 @@ scene = bpy.context.scene
 # ============================================================
 # 2. RENDER SETTINGS
 # ============================================================
-scene.render.engine = 'BLENDER_EEVEE'
+scene.render.engine = 'CYCLES'
+scene.cycles.device = 'GPU'
+scene.cycles.samples = 256
+scene.cycles.use_denoising = True
+
+# OptiX (NVIDIA RTX — fastest)
+try:
+    prefs = bpy.context.preferences.addons['cycles'].preferences
+    prefs.compute_device_type = 'OPTIX'
+    prefs.get_devices()
+    for device in prefs.devices:
+        device.use = True
+    print(f"OptiX GPU aktiviert")
+except Exception as e:
+    print(f"OptiX Fehler: {e}, fallback auf CPU")
+    scene.cycles.device = 'CPU'
 scene.render.resolution_x = 1080
 scene.render.resolution_y = 1920
 scene.render.fps = FPS
