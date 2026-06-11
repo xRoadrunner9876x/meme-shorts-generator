@@ -2,7 +2,7 @@
 VoxelSim - Escalation Video: 1 → 4 → 16 → 50 Blöcke
 Ändere SCENE_CONFIG um verschiedene Szenen zu rendern.
 
-Blender 5.x | EEVEE | Auto Collision + Particles
+Blender 5.x | Cycles OptiX GPU | Auto Collision + Particles
 """
 
 import bpy
@@ -303,7 +303,7 @@ def simulate():
                 
                 # Explosion
                 bpy.ops.object.effector_add(type='FORCE', location=block_pos)
-                explosion = bpy.context.active_object
+                explosion = bpy.context.selected_objects[-1]
                 explosion.field.strength = 500.0 + NUM_BLOCKS * 10
                 explosion.field.flow = 1.0
                 explosion.field.falloff_power = 3.0

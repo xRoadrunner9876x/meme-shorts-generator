@@ -209,7 +209,7 @@ for frame in range(1, TOTAL_FRAMES + 1):
         
         # Explosion
         bpy.ops.object.effector_add(type='FORCE', location=block_pos)
-        explosion = bpy.context.active_object
+        explosion = bpy.context.selected_objects[-1]
         explosion.field.strength = 500.0
         explosion.field.flow = 1.0
         explosion.field.falloff_power = 3.0
