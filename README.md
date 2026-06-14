@@ -1,38 +1,45 @@
-# 🎮 VoxelSim — Satisfying 3D Physics Shorts
+# Meme Shorts Generator
 
-AI-generated Blender simulations for YouTube Shorts.
+Automated YouTube Shorts from Reddit memes + Minecraft parkour.
 
-## Quick Start
+## What it does
+1. Fetches memes from Reddit
+2. OCR reads the meme text
+3. Generates TTS voiceover (edge-tts)
+4. Overlays meme on Minecraft parkour background
+5. Adds reaction images + sound effects
+6. Renders a 30-60s YouTube Short
 
+## Setup
+```bash
+# Install dependencies
+pip install edge-tts flask requests yt-dlp pytesseract easyocr
+
+# Install Tesseract OCR
+winget install UB-Mannheim.TesseractOCR
+
+# Install FFmpeg
+winget install Gyan.FFmpeg
 ```
-# 1. Preview (1 Frame anschauen):
-blender --background --python preview.py
 
-# 2. Alles rendern (4 Szenen automatisch):
-python auto_render.py
+## Run
+```bash
+# Start the render server
+START_RENDERER.bat
 
-# Output: Desktop/voxelsim_renders/final_escalation.mp4
+# Or run the pipeline directly
+python meme_pipeline.py
 ```
 
-## Scripts
+## n8n Integration
+n8n workflow triggers the pipeline every 6 hours automatically.
+Access n8n: `http://localhost:5678`
 
-| Script | Was es macht |
-|--------|-------------|
-| `voxelsim_pipeline.py` | Rendert EINE Szene. `SCENE_ID` oben ändern (1-4) |
-| `preview.py` | Rendert 1 Frame zum anschauen |
-| `auto_render.py` | Rendert alle 4 Szenen + schneidet zusammen |
-| `merge_script.py` | Fügt Sound-Effekte an Collision-Stellen hinzu |
-| `stitch_videos.py` | Schneidet fertige Szenen zusammen |
-
-## Szenen
-
-- `SCENE_ID=1` → 1 Block fällt, zerfällt in Sand
-- `SCENE_ID=2` → 4 Blöcke
-- `SCENE_ID=3` → 16 Blöcke  
-- `SCENE_ID=4` → 50 Blöcke
-
-## Requirements
-
-- Blender 5.x+
-- FFmpeg (für MP4-Konvertierung)
-- Python 3.10+
+## Project Structure
+- `PLAN.md` — Full build plan for OpenCode/AI assistants
+- `meme_pipeline.py` — Main pipeline script
+- `pc_renderer_windows.py` — Flask render server
+- `assets/reactions/` — Reaction meme images
+- `assets/sounds/` — Sound effects
+- `backgrounds/` — Minecraft parkour video
+- `output/` — Rendered Shorts
